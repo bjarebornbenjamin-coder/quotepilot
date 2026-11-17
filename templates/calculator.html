@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Kalkyl · QuotePilot{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>Räkna på värdet för en takfirma</h1>
+  <div class="form">
+    <label>Offerter per månad <input type="number" id="quotes" value="20" min="0"></label>
+    <label>Extra vunna jobb per månad <input type="number" id="jobs" value="1" min="0" step="0.5"></label>
+    <label>Täckningsbidrag per extra jobb (kr) <input type="number" id="margin" value="15000" min="0" step="1000"></label>
+    <label>QuotePilot månadsavgift (kr) <input type="number" id="fee" value="999" min="0"></label>
+  </div>
+  <div class="stats inner">
+    <div class="stat"><span>Extra täckningsbidrag / månad</span><strong id="gross"></strong></div>
+    <div class="stat"><span>Efter månadsavgiften</span><strong id="net"></strong></div>
+    <div class="stat"><span>Andel av offerterna som behöver vinnas extra</span><strong id="share"></strong></div>
+  </div>
+  <p class="note">Illustrativ kalkyl, inte en prognos. Det är inte bevisat att verktyget ger fler vunna jobb.</p>
+</section>
+<script>
+  const fmt = n => Math.round(n).toLocaleString('sv-SE') + ' kr';
+  const v = id => parseFloat(document.getElementById(id).value) || 0;
+  function calc() {
+    const gross = v('jobs') * v('margin');
+    document.getElementById('gross').textContent = fmt(gross);
+    document.getElementById('net').textContent = fmt(gross - v('fee'));
+    const q = v('quotes');
+    document.getElementById('share').textContent = q ? (100 * v('jobs') / q).toLocaleString('sv-SE', {maximumFractionDigits: 1}) + ' %' : '–';
+  }
+  document.querySelectorAll('input').forEach(i => i.addEventListener('input', calc));
+  calc();
+</script>
+{% endblock %}

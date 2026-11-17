@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Översikt · QuotePilot{% endblock %}
+{% block content %}
+{% if not rows %}
+  <section class="card empty">
+    <h1>Välkommen till QuotePilot</h1>
+    <p>Ladda upp er offertlista så visar QuotePilot vilka kunder som inte svarat och skriver förslag på uppföljningar.</p>
+    <div class="row">
+      <a class="btn primary" href="{{ url_for('import_csv') }}">Importera offerter (CSV)</a>
+      <form method="post" action="{{ url_for('demo') }}"><button class="btn">Testa med demodata</button></form>
+    </div>
+  </section>
+{% else %}
+<section class="stats">
+  <div class="stat"><span>Aktiva offerter</span><strong>{{ stats.active }}</strong></div>
+  <div class="stat warn"><span>Behöver följas upp</span><strong>{{ stats.follow_up }}</strong></div>
+  <div class="stat"><span>Väntande ordervärde</span><strong>{{ stats.pipeline|kr }}</strong></div>
+</section>
+
+<div class="grid">
+  <section class="card">
+    <div class="card-head">
+      <h2>Offerter</h2>
+      {% if stats.follow_up %}
+      <form method="post" action="{{ url_for('generate_all') }}"><button class="btn small">Skapa utkast för alla ({{ stats.follow_up }})</button></form>
+      {% endif %}
+    </div>
+    <table class="quotes">
+      <thead><tr><th>Objekt</th><th class="num">Belopp</th><th>Senast</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for r in rows %}
+        <tr class="{{ 'sel' if selected and selected.id == r.q.id }}" onclick="location='{{ url_for('dashboard', q=r.q.id) }}'">
+          <td><a href="{{ url_for('dashboard', q=r.q.id) }}">{{ r.q.property }}</a><div class="sub">{{ r.q.customer_name }}</div></td>
+          <td class="num">{{ r.q.amount_sek|kr }}</td>
+          <td class="sub">{{ r.days }} d sedan</td>
+          <td><span class="pill {{ r.label[1] }}">{{ r.label[0] }}</span>{% if r.has_draft %} <span class="dot" title="Utkast väntar"></span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    {% if selected %}
+      <div class="card-head">
+        <div>
+          <h2>{{ selected.property }}</h2>
+          <div class="sub">{{ selected.customer_name }} · {{ selected.customer_email }} · {{ selected.amount_sek|kr }}</div>
+          <div class="sub">{{ selected.job_description }}</div>
+          <div class="sub">Offert skickad {{ selected.sent_date }} · {{ selected.followups_sent }} av {{ settings.max_followups }} uppföljningar skickade</div>
+        </div>
+        <span class="pill {{ labels[selected_state][1] }}">{{ labels[selected_state][0] }}</span>
+      </div>
+
+      {% if draft %}
+        <form method="post" class="draft">
+          <label>Ämne <input name="subject" value="{{ draft.subject }}"></label>
+          <label>Meddelande <textarea name="body" rows="11" id="body">{{ draft.body }}</textarea></label>
+          <div class="sub">{{ 'AI-föreslagen uppföljning' if draft.source == 'ai' else 'Förslag från mall (ingen AI-nyckel konfigurerad)' }} · du kan redigera texten innan du godkänner.</div>
+          <div class="row">
+            <a class="btn" href="{{ mailto }}">Öppna i mejlprogram</a>
+            <button class="btn primary" formaction="{{ url_for('approve', draft_id=draft.id) }}">Godkänn – markera som skickad</button>
+            <button class="btn ghost" formaction="{{ url_for('save', draft_id=draft.id) }}">Spara</button>
+            <button class="btn ghost" formaction="{{ url_for('discard', draft_id=draft.id) }}">Släng</button>
+          </div>
+          <p class="note">QuotePilot skickar inga mejl själv i den här versionen. Skicka från ditt eget mejlprogram och klicka sedan på Godkänn.</p>
+        </form>
+      {% elif selected.status == 'waiting' and selected_state != 'maxed' %}
+        <form method="post" action="{{ url_for('make_draft', quote_id=selected.id) }}">
+          <p>{% if selected_state == 'follow_up' %}Kunden har inte hörts av på {{ selected_days }} dagar – dags att följa upp.{% else %}Ingen uppföljning behövs än. Du kan ändå skriva en nu.{% endif %}</p>
+          <button class="btn primary">{{ 'Skriv uppföljning med AI' if ai_enabled else 'Skriv uppföljning' }}</button>
+        </form>
+      {% elif selected_state == 'maxed' %}
+        <p>Max antal uppföljningar är skickade. Ring gärna kunden, eller markera offerten som förlorad.</p>
+      {% else %}
+        <p>Kunden har svarat – inga fler påminnelser skickas.</p>
+      {% endif %}
+
+      <div class="status-row">
+        <span class="sub">Markera:</span>
+        {% for st, txt in [('replied','Kunden har svarat'),('won','Vunnen'),('lost','Förlorad'),('waiting','Väntar på svar')] %}
+          {% if selected.status != st %}
+          <form method="post" action="{{ url_for('change_status', quote_id=selected.id) }}"><input type="hidden" name="status" value="{{ st }}"><button class="btn small ghost">{{ txt }}</button></form>
+          {% endif %}
+        {% endfor %}
+        <form method="post" action="{{ url_for('delete', quote_id=selected.id) }}" onsubmit="return confirm('Ta bort offerten?')"><button class="btn small ghost danger">Ta bort</button></form>
+      </div>
+
+      {% if history %}
+        <h3>Skickade uppföljningar</h3>
+        {% for h in history %}
+          <details><summary>{{ h.approved_at[:10] }} – {{ h.subject }}</summary><pre>{{ h.body }}</pre></details>
+        {% endfor %}
+      {% endif %}
+    {% else %}
+      <h2>Inget att följa upp</h2>
+      <p>Välj en offert i listan för att se detaljer.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="card">
+  <h2>Pilotmätning</h2>
+  <p class="sub">Det här är siffrorna att visa takfirman efter piloten.</p>
+  <div class="stats inner">
+    <div class="stat"><span>Uppföljningar skickade</span><strong>{{ pilot.followups_sent }}</strong></div>
+    <div class="stat"><span>Svar efter uppföljning</span><strong>{{ pilot.replies_after }}</strong></div>
+    <div class="stat"><span>Vunna efter uppföljning</span><strong>{{ pilot.won_after }}</strong></div>
+    <div class="stat"><span>Ordervärde vunnet efter uppföljning</span><strong>{{ pilot.won_value_after|kr }}</strong></div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

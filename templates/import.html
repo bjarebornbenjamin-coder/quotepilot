@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Importera · QuotePilot{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>Importera offerter</h1>
+  <p>Exportera er offertlista från Excel eller affärssystemet som CSV och ladda upp den här. Dubbletter hoppas över, så du kan ladda upp samma lista igen när den uppdaterats.</p>
+  <form method="post" enctype="multipart/form-data" class="row">
+    <input type="file" name="file" accept=".csv,text/csv" required>
+    <button class="btn primary">Ladda upp</button>
+  </form>
+
+  {% if result %}
+    <div class="result">
+      <p><strong>{{ result.added }}</strong> offerter importerade{% if result.dupes %}, {{ result.dupes }} dubbletter hoppades över{% endif %}.</p>
+      {% if result.errors %}
+        <p>Följande rader kunde inte läsas:</p>
+        <ul class="errors">{% for e in result.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% endif %}
+      <a class="btn" href="{{ url_for('dashboard') }}">Till översikten</a>
+    </div>
+  {% endif %}
+
+  <h2>Format</h2>
+  <p>Semikolon eller kommatecken fungerar. En rad per offert:</p>
+  <table class="quotes">
+    <thead><tr><th>Kolumn</th><th>Krävs</th><th>Exempel</th></tr></thead>
+    <tbody>
+      <tr><td>kund</td><td>ja</td><td>Anna Lind</td></tr>
+      <tr><td>epost</td><td>ja</td><td>anna.lind@example.com</td></tr>
+      <tr><td>objekt</td><td>ja</td><td>Villa Bromma</td></tr>
+      <tr><td>beskrivning</td><td>nej</td><td>Takrenovering med nya betongpannor</td></tr>
+      <tr><td>belopp</td><td>nej</td><td>84 000</td></tr>
+      <tr><td>skickad</td><td>ja</td><td>2026-11-12 (eller 12/11/2026)</td></tr>
+      <tr><td>status</td><td>nej</td><td>tom, svarat, vunnen eller förlorad</td></tr>
+    </tbody>
+  </table>
+  <p><a href="{{ url_for('sample_csv') }}">Ladda ner exempelfil</a></p>
+</section>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Logga in · QuotePilot{% endblock %}
+{% block content %}
+<section class="card narrow login">
+  <h1>Logga in</h1>
+  <form method="post" class="form">
+    <label>Lösenord <input type="password" name="password" autofocus required autocomplete="current-password"></label>
+    {% if error %}<p class="errors">{{ error }}</p>{% endif %}
+    <button class="btn primary">Logga in</button>
+  </form>
+</section>
+{% endblock %}

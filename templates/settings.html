@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Inställningar · QuotePilot{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>Inställningar</h1>
+  <form method="post" class="form">
+    <label>Firmanamn <input name="company_name" value="{{ s.company_name }}" required></label>
+    <label>Avsändarens namn (signatur) <input name="signer_name" value="{{ s.signer_name }}" placeholder="t.ex. Lars Andersson"></label>
+    <label>Telefon <input name="phone" value="{{ s.phone }}" placeholder="t.ex. 070-123 45 67"></label>
+    <label>Följ upp efter antal dagar utan svar <input type="number" min="1" max="60" name="followup_days" value="{{ s.followup_days }}"></label>
+    <label>Max antal uppföljningar per offert <input type="number" min="1" max="10" name="max_followups" value="{{ s.max_followups }}"></label>
+    <button class="btn primary">Spara</button>
+  </form>
+  <h2>AI</h2>
+  {% if ai_enabled %}
+    <p>AI-utkast är <strong>på</strong> (modell: <code>{{ model }}</code>).</p>
+  {% else %}
+    <p>AI-utkast är <strong>av</strong> – QuotePilot använder en enkel mall. Sätt miljövariabeln <code>ANTHROPIC_API_KEY</code> och starta om för att slå på AI.</p>
+  {% endif %}
+</section>
+{% endblock %}

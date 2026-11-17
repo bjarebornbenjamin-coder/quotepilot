@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Inställning saknas · QuotePilot{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>QuotePilot är inte färdigkonfigurerad</h1>
+  <p>Appen är avstängd tills följande är åtgärdat i Vercel-projektet (Settings → Environment Variables), följt av en ny deploy:</p>
+  <ul class="errors">{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+  <p class="note">Se README.md för steg-för-steg-instruktioner.</p>
+</section>
+{% endblock %}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}QuotePilot{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="{{ url_for('dashboard') }}">Quote<span>Pilot</span></a>
+    <nav>
+      <a href="{{ url_for('dashboard') }}" class="{{ 'on' if request.endpoint == 'dashboard' }}">Översikt</a>
+      <a href="{{ url_for('import_csv') }}" class="{{ 'on' if request.endpoint == 'import_csv' }}">Importera</a>
+      <a href="{{ url_for('calculator') }}" class="{{ 'on' if request.endpoint == 'calculator' }}">Kalkyl</a>
+      <a href="{{ url_for('settings_view') }}" class="{{ 'on' if request.endpoint == 'settings_view' }}">Inställningar</a>
+      {% if login_enabled and session.get('auth') %}
+      <form method="post" action="{{ url_for('logout') }}" class="inline"><button class="linkbtn">Logga ut</button></form>
+      {% endif %}
+    </nav>
+  </header>
+  <main>
+    {% with msgs = get_flashed_messages() %}
+      {% for m in msgs %}<div class="flash">{{ m }}</div>{% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
